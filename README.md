@@ -25,33 +25,19 @@ _No `java.util.zip` fallbacks. No silent behavior drift. If `libaae.so` is missi
 
 **AAE** is a native archive engine (`libaae.so`) + a thin Java 7 facade (`bin.nt.aae`) + a SAF-native demo app. It replaces the usual patchwork of `ZipFile` / Apache Commons / shell `tar` calls with one capability-driven backend:
 
-```mermaid
-flowchart LR
-    subgraph UI["Demo App (UI only)"]
-        MA["MainActivity<br/>Tester + MT-style Compressor"]
-        RUN["AaeRunner<br/>single worker thread"]
-        SAF["SafHelper<br/>SAF to cache staging"]
-    end
-    subgraph API["Java Facade (Java 7, AIDE-safe)"]
-        AAE["Aae<br/>sessions + one-shots"]
-        CAP["AaeCapabilities<br/>ground truth"]
-        SES["AaeSession<br/>list/read/mutate"]
-    end
-    subgraph NATIVE["libaae.so (C++17, ndk-build)"]
-        REG["AaeRegistry<br/>magic probe + dispatch"]
-        ZIP["AaeZip<br/>libzip + libzippp<br/>+ mbedTLS AES"]
-        STR["AaeStream<br/>tar + gz/bz2/xz<br/>zst/lz4 streams"]
-        SZ["AaeSevenZ<br/>LZMA C-SDK<br/>reader + writer"]
-        ARC["AaeArchive<br/>libarchive stub<br/>RAR/CAB/ISO opt-in"]
-    end
-    MA --> RUN --> AAE
-    SAF --> RUN
-    AAE --> CAP
-    AAE --> SES --> REG
-    REG --> ZIP
-    REG --> STR
-    REG --> SZ
-    REG --> ARC
+```
+Demo app (UI only)          Java facade (Java 7)         libaae.so (C++17)
+-------------------         --------------------         -----------------
+MainActivity                Aae                          AaeRegistry
+  (tester + compressor)       (sessions + one-shots)       (probe + dispatch)
+        |                     AaeCapabilities                    |
+        v                     (write ground truth)               v
+AaeRunner ------------------> AaeSession                   +-- AaeZip (libzip, AES)
+  (worker thread)               (list/read/mutate)         +-- AaeStream (tar/streams)
+        ^                                                    +-- AaeSevenZ (LZMA)
+        |                                                    +-- AaeArchive (stub)
+SafHelper
+  (SAF to cache staging)
 ```
 
 > **Design rule:** `AaeCapabilities` is the only truth about what can be written. The UI never guesses — it asks the engine, validates up front, and the native layer re-validates. Nothing reaches JNI that the backend would reject.
@@ -89,29 +75,26 @@ Ground truth traced through `AaeCapabilities.java` → `Aae.h` → `providers/`:
 | `tar.lz4` / `lz4` | yes | yes | LZ4 1..12 (3+ = HC) | no (rejected) | LZ4 frames |
 | `rar` / `cab` / `iso` | opt-in | no | — | — | Stub `AaeArchive.cpp` until libarchive vendored (`AAE_HAVE_LIBARCHIVE=1`, v3.7.4) |
 
-```mermaid
-pie title "libaae.so composition (C/C++ sources)"
-    "libzip (121 files)" : 121
-    "liblzma / xz (79 files)" : 79
-    "zstd (26 files)" : 26
-    "7-Zip C-SDK (23 files)" : 23
-    "bzip2 (7 files)" : 7
-    "engine + libzippp (7 files)" : 7
-    "lz4 (3 files)" : 3
-```
+| Component | Files | Share |
+|-----------|------:|-------|
+| libzip | 121 | ######################################## (46%) |
+| liblzma / xz | 79 | ############################## (30%) |
+| zstd | 26 | ########## (10%) |
+| 7-Zip C-SDK | 23 | ######### (9%) |
+| bzip2 | 7 | ### (3%) |
+| engine + libzippp | 7 | ### (3%) |
+| lz4 | 3 | # (1%) |
 
 ### Level semantics are per-method
 
-```mermaid
-flowchart TD
-    W["AaeWriteOptions(method, level)"] --> V{"validateWrite()"}
-    V -->|STORE| S["level must be 0"]
-    V -->|DEFLATE/BZIP2| D["0=default, else 1..9"]
-    V -->|XZ/LZMA| X["0..9 presets<br/>XZ default=6, LZMA default=5"]
-    V -->|ZSTD| Z["0=default, else 1..22"]
-    V -->|LZ4| L["0=fast, else 1..12<br/>3+ uses LZ4HC"]
-    V -->|DEFAULT| DF["level must be 0"]
-```
+| Method | Allowed levels | Default |
+|--------|---------------|---------|
+| STORE | `0` only (no compression) | 0 |
+| DEFAULT | `0` only (backend decides) | 0 |
+| DEFLATE / BZIP2 | `0` (default) or `1..9` | 6 / 0 |
+| XZ / LZMA | `0..9` (liblzma presets) | 6 (XZ), 5 (LZMA) |
+| ZSTD | `0` (default) or `1..22` | 0 |
+| LZ4 | `0` (fast) or `1..12` (`3+` uses LZ4HC) | 0 |
 
 MT-Manager dialog mapping (`mtLevelsFor` / `mtOptions`): `Store`, `Fastest`, `Fast`, `Normal`, `Maximum`, `Ultra`, (+ `APK mode` for ZIP which maps to STORE). ZIP + password selects AES-256 automatically.
 
