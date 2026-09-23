@@ -1,0 +1,17 @@
+# External git submodules (sources NOT vendored in-tree).
+#
+# libarchive provides the RAR/CAB/ISO/TAR-write backends that
+# app/src/main/jni/aae/providers/AaeArchive.cpp is stubbed for.
+# Everything else the engine needs (zlib via NDK, bz2, liblzma, zstd,
+# lz4, mbedTLS, libzip, sevenzip decoder) is already vendored under
+# app/src/main/jni/thirdparty/ — see each VENDORED_FROM.txt.
+#
+# One-time setup (needs network, run once per clone):
+#   git submodule add -b v3.7.4 \
+#       https://github.com/libarchive/libarchive.git external/libarchive
+#   git submodule update --init --recursive
+# Afterwards plain clones use: git clone --recurse-submodules <your-fork-url>
+[submodule "external/libarchive"]
+	path = external/libarchive
+	url = https://github.com/libarchive/libarchive.git
+	branch = v3.7.4

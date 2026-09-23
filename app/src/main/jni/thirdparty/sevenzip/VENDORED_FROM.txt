@@ -1,0 +1,22 @@
+source: 7-Zip-JBinding-4Android-Release-16.02-2.03.zip
+  (sevenzipjbinding/src/main/cpp/7zip/C/ — LZMA SDK 24.x C decoder)
+sha256: 875f38aac441f41e6eb693177e020e97971dca97 (as reported by unzip)
+license: public domain (LZMA SDK C code; see 7zTypes.h/DOC)
+kept: 20 decode-path C files (7zArcIn/7zDec/7zBuf/7zCrc/7zStream/7zAlloc/
+  7zFile/Alloc/CpuArch/LzmaDec/Lzma2Dec/Bra/Bra86/BraIA64/Bcj2/Delta/
+  Ppmd7/Ppmd7Dec/Ppmd8/Ppmd8Dec) + all C/*.h
+dropped: encoders (*Enc*, *Mt*), XzDec (7z never embeds xz), Aes/Sha256
+  (C decoder has no AES path), file tools, docs, JBinding JNI layer
+note: read-only 7z (LZMA/LZMA2/PPMD/BCJ/Delta/Copy). Encrypted 7z fails
+  cleanly with a password status — AES needs the C++ Crypto path (later).
+  RAR is NOT in the C tree (C++ RarHandler only) — still unsupported.
+
+update: LZMA encoder re-vendored from the same bundle (sevenzipjbinding C
+tree; LzmaEnc.c == p7zip copy, LzmaEnc.h matches the kept header byte for
+byte): LzmaEnc.c + LzFind.c + LzFindMt.c + Threads.c drive the 7z write
+path (AaeSevenZ.cpp, single-threaded). License unchanged (public domain).
+
+fix: LzFindMt.c/Threads.c dropped again — the bundle's Threads.h is
+Windows-only and LzmaEnc compiles single-threaded with -D_7ZIP_ST=1
+(which strips every Mt_ reference; verified by link). Kept encoder
+files: LzmaEnc.c + LzFind.c only.

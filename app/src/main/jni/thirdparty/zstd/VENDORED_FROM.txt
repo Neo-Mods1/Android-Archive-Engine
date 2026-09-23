@@ -1,0 +1,7 @@
+source: zstd-jni-1.5.7-16.zip (src/main/native/ — upstream zstd 1.5.7)
+sha256: a814bf1176541fcc60c4c04c73e09808eda0ff0829472c85b2fbd2d19c10c289
+license: BSD-3
+kept: zstd.h, zstd_errors.h, zdict.h, common/, compress/, decompress/,
+  dictBuilder/ (zdict.c needed by decompress/)
+dropped: jni_*.c glue, huf_decompress_amd64.S (x86-only asm)
+note: built with -DZSTD_MULTITHREAD=1 (bionic pthreads). ZIP-zstd support.

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.AAE.androidlib">
+
+    <!-- No storage permissions: all file access goes through SAF
+         (ACTION_OPEN_DOCUMENT / ACTION_OPEN_DOCUMENT_TREE /
+         ACTION_CREATE_DOCUMENT) with cache staging for the native engine.
+         No legacy WRITE_EXTERNAL_STORAGE: extraction and compression write
+         through ContentResolver Uris. -->
+
+    <application
+        android:name="com.AAE.androidlib.AAEApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true">
+        <activity android:name="com.AAE.androidlib.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.AAE.androidlib.CrashActivity"
+            android:exported="false"
+            android:process=":crash" />
+    </application>
+</manifest>

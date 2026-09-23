@@ -1,0 +1,42 @@
+# Fetches all external git submodules, packs them with 7z, uploads the
+# artifact. Run manually from the Actions tab (workflow_dispatch) on your
+# fork, then download `external-libs` and unpack it next to the project.
+#
+# Why CI does the fetching: submodules are pinned by gitlink, so the artifact
+# always matches the exact commits this superproject points at — no version
+# drift between developers.
+name: external-libs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Fetch submodules (belt and braces)
+        run: bash tools/vendor/fetch_submodules.sh
+
+      - name: Install 7z
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Show what will be packed
+        run: |
+          ls -la external
+          git submodule status --recursive
+
+      - name: Pack with 7z
+        run: 7z a -t7z -m0=lzma2 -mx=9 external-libs.7z external/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-libs
+          path: external-libs.7z
+          retention-days: 14

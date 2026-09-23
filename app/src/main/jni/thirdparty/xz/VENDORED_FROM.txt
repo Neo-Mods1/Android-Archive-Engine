@@ -1,0 +1,9 @@
+source: xz-5.8.1.tar.gz (https://github.com/tukaani-project/xz/releases)
+sha256: 507825b599356c10dca1cd720c9d0d0c9d5400b9de300af00e4d1ea150795543
+license: 0BSD (liblzma + build system)
+kept: src/liblzma/** (minus *tablegen, x86 .S, build files), src/common/
+  (tuklib_cpucores/physmem + headers — CLI helpers dropped),
+  xz_config.h (hand-written Android config, force-included via -include)
+dropped: xz/xzdec/lzmainfo tools, tests, docs, scaffolding,
+  crc32_small/crc64_small (fast variants used)
+note: 79 C files. LZMA1/LZMA2/XZ for ZIP-xz (and later 7z).

@@ -1,0 +1,7 @@
+source: lz4-1.10.0.tar.gz (https://github.com/lz4/lz4/releases)
+sha256: 537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b
+license: BSD-2 (lib sources are BSD-2; see LICENSE)
+kept: lz4.c/h, lz4frame.c/h, lz4frame_static.h, lz4hc.c/h (hc kept for
+  future frame compression; only lz4.c + lz4frame.c are built today)
+dropped: tools, tests, examples, docs, build scaffolding, lz4file.*
+note: .lz4 frame decompression for the stream backend.
