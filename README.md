@@ -48,7 +48,10 @@ flowchart LR
     SAF --> RUN
     AAE --> CAP
     AAE --> SES --> REG
-    REG --> ZIP & STR & SZ & ARC
+    REG --> ZIP
+    REG --> STR
+    REG --> SZ
+    REG --> ARC
 ```
 
 > **Design rule:** `AaeCapabilities` is the only truth about what can be written. The UI never guesses — it asks the engine, validates up front, and the native layer re-validates. Nothing reaches JNI that the backend would reject.
@@ -87,7 +90,7 @@ Ground truth traced through `AaeCapabilities.java` → `Aae.h` → `providers/`:
 | `rar` / `cab` / `iso` | opt-in | no | — | — | Stub `AaeArchive.cpp` until libarchive vendored (`AAE_HAVE_LIBARCHIVE=1`, v3.7.4) |
 
 ```mermaid
-pie showData title "libaae.so composition (C/C++ sources)"
+pie title "libaae.so composition (C/C++ sources)"
     "libzip (121 files)" : 121
     "liblzma / xz (79 files)" : 79
     "zstd (26 files)" : 26
@@ -97,7 +100,7 @@ pie showData title "libaae.so composition (C/C++ sources)"
     "lz4 (3 files)" : 3
 ```
 
-### Level semantics (per-method, not "0..9 for everything")
+### Level semantics are per-method
 
 ```mermaid
 flowchart TD
